@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">RxDemo</string>
+    <string name="complex_hello">Complex Hello</string>
+    <string name="neat_hello">Neat Hello</string>
+    <string name="map_hello">Hello with Map</string>
+    <string name="calculate_neat_hello">Calculate Neat Hello</string>
+    <string name="calculate_map_hello">Calculate Hello with Map</string>
+    <string name="click_me">Click Me</string>
+
+</resources>
