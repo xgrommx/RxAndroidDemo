@@ -8,5 +8,6 @@
     <string name="calculate_neat_hello">Calculate Neat Hello</string>
     <string name="calculate_map_hello">Calculate Hello with Map</string>
     <string name="click_me">Click Me</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

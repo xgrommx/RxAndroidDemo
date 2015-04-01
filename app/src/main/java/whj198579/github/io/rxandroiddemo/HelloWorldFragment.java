@@ -8,7 +8,6 @@ import rx.functions.Func1;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,15 +30,14 @@ public class HelloWorldFragment extends Fragment implements OnClickListener{
 	private NeatHelloSubscriber mNeatHelloSubscriber;
 	
 	private Observable<String> mMapHelloObservable;
-	private Observable<String> mCaculateNeatHelloObservable;
-	private Observable<String> mCaculateMapHelloObservable;
+	private Observable<String> mCalculateNeatHelloObservable;
+	private Observable<String> mCalculateMapHelloObservable;
 	
 	private final Handler mHandler = new Handler();
 	private final String HELLO_WORLD = "Hello, world!";
 	
 	@Override
-	public View onCreateView(LayoutInflater inflater,
-			@Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+	public View onCreateView(LayoutInflater inflater,  ViewGroup container, Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.hello_world_fragment, container, false);
 		
 		mComplexHelloBtn = view.findViewById(R.id.complexHelloBtn);
@@ -61,10 +59,10 @@ public class HelloWorldFragment extends Fragment implements OnClickListener{
 		mNeatHelloObservable = Observable.just("Neat: " + HELLO_WORLD);
 		mNeatHelloSubscriber = new NeatHelloSubscriber();
 		
-		mMapHelloObservable = mNeatHelloObservable.map(new NeatHelloWithMap());
-		mCaculateNeatHelloObservable = mNeatHelloObservable.map(new CaculateStringMap()).map(new IntegerToStringMap());
-		mCaculateMapHelloObservable = mMapHelloObservable.map(new CaculateStringMap()).map(new IntegerToStringMap());
-		
+		mMapHelloObservable = mNeatHelloObservable.map(s ->  "After map: " + s);
+		mCalculateNeatHelloObservable = mNeatHelloObservable.map(new CalculateStringMap()).map(new IntegerToStringMap());
+		mCalculateMapHelloObservable = mMapHelloObservable.map(new CalculateStringMap()).map(new IntegerToStringMap());
+
 		return view;
 	}
 
@@ -77,21 +75,14 @@ public class HelloWorldFragment extends Fragment implements OnClickListener{
 		} else if(v == mMapHelloBtn){
 			mMapHelloObservable.subscribe(mNeatHelloSubscriber);
 		} else if(v == mCalculateNeatHelloBtn){
-			mCaculateNeatHelloObservable.subscribe(mNeatHelloSubscriber);
+			mCalculateNeatHelloObservable.subscribe(mNeatHelloSubscriber);
 		} else if(v == mCalculateMapHelloBtn){
-			mCaculateMapHelloObservable.subscribe(mNeatHelloSubscriber);
+			mCalculateMapHelloObservable.subscribe(mNeatHelloSubscriber);
 		}
 	}
 
 	private void updateUI(final String text){
-		mHandler.post(new Runnable(){
-
-			@Override
-			public void run() {
-				mText.setText(text);
-			}
-			
-		});
+		mHandler.post(() -> mText.setText(text));
 	}
 	
 	private class ComplexHelloOnSubscribe implements OnSubscribe<String>{
@@ -131,31 +122,22 @@ public class HelloWorldFragment extends Fragment implements OnClickListener{
 		}
 		
 	}
-	
-	private class NeatHelloWithMap implements Func1<String, String>{
 
-		@Override
-		public String call(String s) {
-			return "After map: " + s;
-		}
-		
-	}
-	
-	private class CaculateStringMap implements Func1<String, Integer>{
+	private class CalculateStringMap implements Func1<String, Integer>{
 
 		@Override
 		public Integer call(String s) {
 			return s.length();
 		}
-		
+
 	}
-	
+
 	private class IntegerToStringMap implements Func1<Integer, String>{
 
 		@Override
 		public String call(Integer i) {
 			return Integer.toString(i);
 		}
-		
+
 	}
 }

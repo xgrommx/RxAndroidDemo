@@ -27,7 +27,6 @@ public class MainActivity extends ActionBarActivity {
                     "Hello world",
                     "Double Clicks",
                     "Http Asynchronous"
-
             };
 
     @Override
@@ -51,12 +50,8 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == android.R.id.home && !mSlidingLayout.isOpen()) {
             mSlidingLayout.openPane();
             return true;
@@ -106,6 +101,11 @@ public class MainActivity extends ActionBarActivity {
                 case 1:
                     mFragment = new DoubleClicksFragment();
                     break;
+                case 2:
+                    mFragment = new HttpAsyncFragment();
+                    break;
+                default:
+                    break;
             }
 
             if (mFragment != null) {
@@ -117,6 +117,7 @@ public class MainActivity extends ActionBarActivity {
 
     @SuppressWarnings("deprecation")
     private class FirstLayoutListener implements ViewTreeObserver.OnGlobalLayoutListener {
+
         @Override
         public void onGlobalLayout() {
             mActionBarHelper.onFirstLayout();
@@ -127,6 +128,7 @@ public class MainActivity extends ActionBarActivity {
                 mSlidingLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
             }
         }
+
     }
 
     private class ActionBarHelper {
