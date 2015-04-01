@@ -15,7 +15,6 @@ import org.apache.http.Header;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.subjects.PublishSubject;
 
 public class HttpAsyncFragment extends Fragment implements View.OnClickListener {
 
@@ -23,10 +22,8 @@ public class HttpAsyncFragment extends Fragment implements View.OnClickListener 
     private TextView mText;
 
     private final Handler mHandler = new Handler();
-    private String mComplete = "";
 
-    private PublishSubject<Void> mFirstNetClientSubject;
-    private PublishSubject<Void> mSecondNetClientSubject;
+    private Observable<Void> mResponseObservable;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)  {
@@ -43,82 +40,80 @@ public class HttpAsyncFragment extends Fragment implements View.OnClickListener 
     @Override
     public void onClick(View v) {
         if(v == mClickMeBtn){
-            mFirstNetClientSubject = PublishSubject.create();
-            mSecondNetClientSubject = PublishSubject.create();
-            Observable.merge(mFirstNetClientSubject, mSecondNetClientSubject).subscribe(new AsyncHttpSubscriber());
+            addText("clear");
 
-            mComplete = "";
-            updateUI(mComplete);
-
-            AsyncHttpClient firstClient = new AsyncHttpClient();
-            firstClient.get("http://www.bing.com", new FirstAsyncHttpResponseHandler());
-
-            AsyncHttpClient secondClient= new AsyncHttpClient();
-            secondClient.get("http://www.bing.com", new SecondAsyncHttpResponseHandler());
+            Observable<String> mRequestObservable = Observable.merge( Observable.just("http://www.bing.com"), Observable.just("http://www.bing.com"));
+            mRequestObservable.subscribe(new RequestSubscriber());
         }
     }
 
-    private void updateUI(final String text){
-        mHandler.post(() ->  mText.setText(text));
+    private void addText(final String text){
+        mHandler.post(() ->  mText.setText(mText.getText() + "\r\n" + text));
     }
 
-    private class FirstAsyncHttpResponseHandler extends AsyncHttpResponseHandler{
+    private Observable<Void> createObservable(String url){
+        Observable<Void> myObservable = Observable.create((sub) -> {
+            AsyncHttpClient client = new AsyncHttpClient();
+            client.get(url, new AsyncHttpResponseHandler(){
 
-        @Override
-        public void onStart() {
-        }
+                @Override
+                public void onStart() {
+                }
 
-        @Override
-        public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-            mComplete += "The first Async Http: Success.\r\n";
-            mFirstNetClientSubject.onNext(null);
-            mFirstNetClientSubject.onCompleted();
-        }
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] response) {
+                    sub.onNext(null);
+                    sub.onCompleted();;
+                }
 
-        @Override
-        public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-            mComplete += "The first Async Http: Failure.\r\n";
-            mFirstNetClientSubject.onNext(null);
-            mFirstNetClientSubject.onCompleted();
-        }
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
+                    sub.onNext(null);
+                    sub.onCompleted();;
+                }
 
-        @Override
-        public void onRetry(int retryNo) {
+                @Override
+                public void onRetry(int retryNo) {
 
-        }
+                }
+            });
+        });
+
+        return myObservable;
     }
 
-    private class SecondAsyncHttpResponseHandler extends AsyncHttpResponseHandler{
-
-        @Override
-        public void onStart() {
-        }
-
-        @Override
-        public void onSuccess(int statusCode, Header[] headers, byte[] response) {
-            mComplete += "The second Async Http: Success.\r\n";
-            mSecondNetClientSubject.onNext(null);
-            mSecondNetClientSubject.onCompleted();
-        }
-
-        @Override
-        public void onFailure(int statusCode, Header[] headers, byte[] errorResponse, Throwable e) {
-            mComplete += "The second Async Http: Failure.\r\n";
-            mSecondNetClientSubject.onNext(null);
-            mSecondNetClientSubject.onCompleted();
-        }
-
-        @Override
-        public void onRetry(int retryNo) {
-
-        }
-    }
-
-    private class AsyncHttpSubscriber extends Subscriber<Void> {
+    private class RequestSubscriber extends Subscriber<String>{
 
         @Override
         public void onCompleted() {
-            updateUI(mComplete);
+            addText("RequestSubscriber: onCompleted");
+
+            mResponseObservable.subscribe(new ResponseSubscriber());
+        }
+
+        @Override
+        public void onError(Throwable e) {
+
+        }
+
+        @Override
+        public void onNext(String url) {
+            addText("RequestSubscriber: onNext");
+
+            if (mResponseObservable == null){
+                mResponseObservable = createObservable(url);
+            } else{
+                mResponseObservable = Observable.merge(mResponseObservable, createObservable(url));
+            }
+        }
+
+    }
+
+    private class ResponseSubscriber extends Subscriber<Void> {
+
+        @Override
+        public void onCompleted() {
+            addText("ResponseSubscriber: onCompleted");
         }
 
         @Override
